@@ -153,7 +153,7 @@ class DataAccess():
         self.cursor.execute(check_sql, (player_id, session_id))
         if self.cursor.fetchone():
             return 
-        
+
         sql = """
         insert into rating (
             player_id,
@@ -177,6 +177,18 @@ class DataAccess():
         where player_id = ?
         """
         self.cursor.execute(sql, (player_id,))
+        return self.cursor.fetchone()
+
+    def get_player_rating_by_session(self, session_id, player_id):
+        sql = """
+        select 
+            previous_rating,
+            rating
+        from rating
+        where session_id = ?
+        and player_id = ?
+        """
+        self.cursor.execute(sql, (session_id, player_id))
         return self.cursor.fetchone()
 
     def get_players(self):

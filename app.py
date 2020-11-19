@@ -165,8 +165,10 @@ def save_results(league, session_id):
     # group winners etc.
     db = get_db(league)
     match_records = db.get_match_results(session_id)
-    summaries = []
-    #if request.method == 'POST':
+    # calculate the total rating change per player
+    # TODO: should probably encapsulate this logic somewhere else
+    # what if rules like "bonus points" need to be added?
+    player_ratings = {}
     for m in match_records:
         # player1
         # player2
@@ -175,38 +177,53 @@ def save_results(league, session_id):
         match = Match.from_match_row(m)
         # calculate rating change and update player's ratings for the session
         # a1 = bttc_algorithm(rating1, player_1_wins, rating2, player_2_wins)
-        # TODO: need to do this across ALL matches for each player
-        r1 = match.player1.rating
-        r2 = match.player2.rating
+        ratings1 = db.get_player_rating_by_session(session_id, match.player1.player_id)
+        if ratings1 is not None:
+            r1 = ratings1['previous_rating']
+        else:
+            r1 = match.player1.rating
+
+        ratings2 = db.get_player_rating_by_session(session_id, match.player2.player_id)
+        if ratings2 is not None:
+            r2 = ratings2['previous_rating']
+        else:
+            r2 = match.player2.rating
+        # initialize these with the starting rating for this session
+        if match.player1.player_id not in player_ratings:
+            player_ratings[match.player1.player_id] = r1
+        if match.player2.player_id not in player_ratings:
+            player_ratings[match.player2.player_id] = r2
+
         w1 = match.p1_wins
         w2 = match.p2_wins
         p1_adjustment = bttc_algorithm(r1, w1, r2, w2)
         p2_adjustment = bttc_algorithm(r2, w2, r1, w1)
-        r1_new = r1 + p1_adjustment
-        r2_new = r2 + p2_adjustment
+        # add the adjustment to the ongoing rating tally for this player
+        player_ratings[match.player1.player_id] += p1_adjustment
+        player_ratings[match.player2.player_id] += p2_adjustment
         # add the new ratings for each player
+
+    summaries = []
+    for player_id, new_rating in player_ratings.items():
+        ratings1 = db.get_player_rating_by_session(session_id, player_id)
+        if ratings1 is not None:
+            r1 = ratings1['previous_rating']
+        else:
+            r1 = match.player1.rating
+
         db.add_rating(
-            player_id=match.player1.player_id, 
+            player_id=player_id, 
             session_id=session_id, 
             previous_rating=r1, 
-            rating=r1_new
+            rating=new_rating
         )
-        db.add_rating(
-            player_id=match.player2.player_id, 
-            session_id=session_id, 
-            previous_rating=r2, 
-            rating=r2_new
-        )
+        p = db.get_player(player_id)
+        player = Player.from_player_row(p)
         # should update player's rating too (on player record)
         summary = '{0} -- old rating: {1}, new rating: {2}'.format(
-            match.player1.name,
+            player.name,
             r1,
-            r1_new
-        )
-        summary = '{0} -- old rating: {1}, new rating: {2}'.format(
-            match.player2.name,
-            r2,
-            r2_new
+            new_rating
         )
         summaries.append(summary)
     return jsonify(summaries)
