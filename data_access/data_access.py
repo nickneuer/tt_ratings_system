@@ -115,7 +115,6 @@ class DataAccess():
         join player p2
             on p2.player_id = m.player_2_id
         where m.session_id = ?
-        and m.group_number = ?
         and m.ordinal = 1
         """
         self.cursor.execute(sql, (session_id,))
@@ -144,16 +143,28 @@ class DataAccess():
         self.conn.commit()
         return self.cursor.lastrowid
 
-    def add_rating(self, player_id, session_id, rating, won_group=0):
+    def add_rating(self, player_id, session_id, previous_rating, rating, won_group=0):
+        check_sql = """
+        select 1 
+        from rating
+        where player_id = ?
+        and session_id = ?
+        """
+        self.cursor.execute(check_sql, (player_id, session_id))
+        if self.cursor.fetchone():
+            return 
+        
         sql = """
         insert into rating (
             player_id,
             session_id,
+            previous_rating,
             rating,
             won_group
         )
+        values (?, ?, ?, ?, ?)
         """
-        self.cursor.execute(sql, (player_id, session_id, rating, won_group))
+        self.cursor.execute(sql, (player_id, session_id, previous_rating, rating, won_group))
         self.conn.commit()
 
     def get_player(self, player_id):

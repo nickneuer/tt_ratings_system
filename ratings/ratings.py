@@ -34,7 +34,7 @@ def bttc_algorithm(rating, wins, player_2_rating, player_2_wins):
     if wins == player_2_wins == 0:
         return 0
     
-    rating_difference = abs(rating - rating2)
+    rating_difference = abs(rating - player_2_rating)
     # which player won? 
     won_match = True
     if wins < player_2_wins:

@@ -8,6 +8,7 @@ import json
 import os
 from data_access.data_access import DataAccess
 from ratings.groupings import Group, GroupResult, Player, Match, make_groups
+from ratings.ratings import bttc_algorithm
 from wtforms import (
     Form, BooleanField, StringField, 
     PasswordField, IntegerField, validators, FieldList, FormField)
@@ -160,16 +161,56 @@ def edit_groups(league, session_id):
 
 @app.route('/leagues/<league>/session/<session_id>/results', methods=['GET', 'POST'])
 def save_results(league, session_id):
+    # eventually will render things like ranking-pre ranking-post
+    # group winners etc.
     db = get_db(league)
     match_records = db.get_match_results(session_id)
-    if request.method == 'POST':
-        for m in match_records:
-            # player1
-            # player2
-            # p1_wins
-            # p2_wins
-            match = Match.from_match_row(m)
-            
+    summaries = []
+    #if request.method == 'POST':
+    for m in match_records:
+        # player1
+        # player2
+        # p1_wins
+        # p2_wins
+        match = Match.from_match_row(m)
+        # calculate rating change and update player's ratings for the session
+        # a1 = bttc_algorithm(rating1, player_1_wins, rating2, player_2_wins)
+        # TODO: need to do this across ALL matches for each player
+        r1 = match.player1.rating
+        r2 = match.player2.rating
+        w1 = match.p1_wins
+        w2 = match.p2_wins
+        p1_adjustment = bttc_algorithm(r1, w1, r2, w2)
+        p2_adjustment = bttc_algorithm(r2, w2, r1, w1)
+        r1_new = r1 + p1_adjustment
+        r2_new = r2 + p2_adjustment
+        # add the new ratings for each player
+        db.add_rating(
+            player_id=match.player1.player_id, 
+            session_id=session_id, 
+            previous_rating=r1, 
+            rating=r1_new
+        )
+        db.add_rating(
+            player_id=match.player2.player_id, 
+            session_id=session_id, 
+            previous_rating=r2, 
+            rating=r2_new
+        )
+        # should update player's rating too (on player record)
+        summary = '{0} -- old rating: {1}, new rating: {2}'.format(
+            match.player1.name,
+            r1,
+            r1_new
+        )
+        summary = '{0} -- old rating: {1}, new rating: {2}'.format(
+            match.player2.name,
+            r2,
+            r2_new
+        )
+        summaries.append(summary)
+    return jsonify(summaries)
+
     
 
 @app.route('/leagues/<league>/session/<session_id>/groups/input', methods=['GET', 'POST'])

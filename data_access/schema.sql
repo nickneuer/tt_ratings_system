@@ -35,10 +35,12 @@ drop table if exists rating;
 create table rating (
     player_id integer,
     session_id integer,
+    previous_rating integer,
     rating integer,
     won_group integer DEFAULT 0,
     FOREIGN KEY(player_id) REFERENCES player(player_id),
-    FOREIGN KEY(session_id) REFERENCES session(session_id)
+    FOREIGN KEY(session_id) REFERENCES session(session_id),
+    CONSTRAINT player_per_session UNIQUE(player_id,session_id)
 );
 
 drop table if exists session_to_player;
