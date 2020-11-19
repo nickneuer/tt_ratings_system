@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <title>Lap logging</title>
+
+        <style>
+            .is-hidden {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <a id="add" href="#">Add Lap</a>
+
+        {# Show all subforms #}
+        <form id="lap-form" action="" method="POST" role="form">
+            {{ form.hidden_tag() }}
+
+            <div id="subforms-container">
+                {% for subform in form.laps %}
+                    <div id="lap-{{ loop.index0 }}-form" class="subform" data-index="{{ loop.index0 }}">
+                        {{ subform.runner_name.label }}
+                        {{ subform.runner_name }}
+
+                        {{ subform.lap_time.label }}
+                        {{ subform.lap_time}}
+
+                        <a class="remove" href="#">Remove</a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit">Send</button>
+        </form>
+
+        {% if form.errors %}
+            {{ form.errors }}
+        {% endif %}
+
+        {# Show submitted data #}
+        {% if data is defined %}
+            <p>
+                Received data: 
+                {{ data }}
+            </p>
+        {% endif %}
+    </body>
+</html>

@@ -1,0 +1,8 @@
+{% from "_formhelpers.html" import render_field %}
+<form method=post>
+  <dl>
+    {{ render_field(form.player_name) }}
+    {{ render_field(form.rating) }}
+  </dl>
+  <p><input type=submit value=Create>
+</form>

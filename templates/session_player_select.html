@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leagues</title>
+</head>
+<body>
+<h2>Add Players to Session</h2>
+<form method="post">
+ <select id="player" name="player">
+    {% for player in players %}
+    <option value="{{ player['player_id'] }}"">{{ '{0} ({1})'.format(player.name, player.rating) }}</option>"
+    {% endfor %}
+</select>
+<input type="submit" value="add">
+</form>
+<form method="get" action="{{ url_for('edit_groups', league=league, session_id=session_id) }}">
+    <input type="submit" value="Create Groups" />
+</form>
+<div></div>
+<!-- make this something prettier eventually -->
+<h2>Selected Players</h2>
+{%for p in selected_players %}
+    <div>{{ '{0} ({1})'.format(p.name, p.rating) }}</div>
+{% endfor %}
+</body>
+</html>
+

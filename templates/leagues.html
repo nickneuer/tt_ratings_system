@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leagues</title>
+</head>
+<body>
+<h2>Choose League</h2>
+<form method="post">
+ <select id="league" name="league">
+    {% for league_name in leagues %}
+    <option value= "{{league_name}}">{{league_name}}</option>"
+    {% endfor %}
+</select>
+<input type="submit" value="Go!">
+</form>
+<form method="get" action="{{ url_for('create_league') }}">
+    <input type="submit" value="new league" />
+</form>
+</body>
+</html>

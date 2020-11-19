@@ -1,0 +1,20 @@
+{%for g in group_results %}
+    <h2>{{ "Group {}".format(g.group_number) }} </h2>
+    {%for p in g.players %}
+        <p>{{ '{0} ({1})'.format(p.name, p.rating) }}</p>
+    {% endfor %}
+    <h3>Matches</h3>
+    {%for match in g.matches %}
+        <p>{{ 
+            '{0} ({1}) v.s. {2} ({3}): {4}-{5}'.format(
+                match.player1.name,
+                match.player1.rating,
+                match.player2.name,
+                match.player2.rating,
+                match.p1_wins,
+                match.p2_wins
+            ) 
+        }}
+        </p>
+    {% endfor %}
+{% endfor %}
