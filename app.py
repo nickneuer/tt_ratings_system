@@ -7,7 +7,7 @@ from flask import (
 import json
 import os
 from data_access.data_access import DataAccess
-from ratings.groupings import Group, GroupResult, Player, make_groups
+from ratings.groupings import Group, GroupResult, Player, Match, make_groups
 from wtforms import (
     Form, BooleanField, StringField, 
     PasswordField, IntegerField, validators, FieldList, FormField)
@@ -57,8 +57,8 @@ class GroupForm(Form):
     num_groups = IntegerField('Number of Groups', [])
 
 class MatchForm(Form):
-    p1_wins = IntegerField('Wins', [])
-    p2_wins = IntegerField('Losses', [])
+    p1_wins = IntegerField('', [])
+    p2_wins = IntegerField('', [])
 
 @app.route('/new_league', methods=['GET', 'POST'])
 def create_league():
@@ -158,6 +158,20 @@ def edit_groups(league, session_id):
         return render_template('group_edit.html', form=form, groups=groups)
     return render_template('group_edit.html', form=form, groups=groups)
 
+@app.route('/leagues/<league>/session/<session_id>/results', methods=['GET', 'POST'])
+def save_results(league, session_id):
+    db = get_db(league)
+    match_records = db.get_match_results(session_id)
+    if request.method == 'POST':
+        for m in match_records:
+            # player1
+            # player2
+            # p1_wins
+            # p2_wins
+            match = Match.from_match_row(m)
+            
+    
+
 @app.route('/leagues/<league>/session/<session_id>/groups/input', methods=['GET', 'POST'])
 def match_edit(league, session_id):
     db = get_db(league)
@@ -186,7 +200,7 @@ def match_edit(league, session_id):
         group_result.players = g.players
         group_results.append(group_result)
 
-    return render_template('groups.html', group_results=group_results)
+    return render_template('groups.html', group_results=group_results, session_id=session_id, league=league)
 
 @app.route('/leagues/<league>/session/<session_id>/groups/input/<player_id1>/<player_id2>', methods=['GET', 'POST'])
 def save_match_score(league, session_id, player_id1, player_id2):

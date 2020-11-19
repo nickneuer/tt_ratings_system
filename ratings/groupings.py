@@ -71,6 +71,25 @@ class Match():
         self.p1_wins = p1_wins
         self.p2_wins = p2_wins
 
+    @staticmethod
+    def from_match_row(match_row):
+        p1 = Player(
+            match_row['player_1_id'], 
+            match_row['player_1_name'], 
+            match_row['player_1_rating']
+        )
+        p2 = Player(
+            match_row['player_2_id'], 
+            match_row['player_2_name'], 
+            match_row['player_2_rating']
+        )
+        match = Match(
+            p1, 
+            p2, 
+            match_row['player_1_wins'], 
+            match_row['player_2_wins']
+        )
+        return match
 
 class GroupResult():
     def __init__(self, group_number, matches, players=[]):
@@ -91,17 +110,7 @@ class GroupResult():
         # m.player_2_wins
         matches = []
         for m in match_rows:
-            p1 = Player(
-                m['player_1_id'], 
-                m['player_1_name'], 
-                m['player_1_rating']
-            )
-            p2 = Player(
-                m['player_2_id'], 
-                m['player_2_name'], 
-                m['player_2_rating']
-            )
-            match = Match(p1, p2, m['player_1_wins'], m['player_2_wins'])
+            match = Match.from_match_row(m)
             matches.append(match)
 
         return GroupResult(group_num, matches)

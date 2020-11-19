@@ -1,20 +1,56 @@
+
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
 {%for g in group_results %}
     <h2>{{ "Group {}".format(g.group_number) }} </h2>
     {%for p in g.players %}
         <p>{{ '{0} ({1})'.format(p.name, p.rating) }}</p>
     {% endfor %}
     <h3>Matches</h3>
+
+    <table>
+      <tr>
+        <th>Player 1</th>
+        <th>Player 2</th>
+        <th>Wins (player 1)</th>
+        <th>Wins (player 2)</th>
+        <th></th>
+      </tr>
     {%for match in g.matches %}
-        <p>{{ 
-            '{0} ({1}) v.s. {2} ({3}): {4}-{5}'.format(
-                match.player1.name,
-                match.player1.rating,
-                match.player2.name,
-                match.player2.rating,
-                match.p1_wins,
-                match.p2_wins
-            ) 
-        }}
-        </p>
+
+      <tr>
+        <td>{{ '{0} ({1})'.format(
+                    match.player1.name,
+                    match.player1.rating
+                ) 
+            }}
+        </td>
+        <td>{{ '{0} ({1})'.format(
+                    match.player2.name,
+                    match.player2.rating
+                ) 
+            }}
+        </td>
+        <td>{{ match.p1_wins }}</td>
+        <td>{{ match.p2_wins }}</td>
+        <td>
+            <form method="get" action="{{ 
+                                           url_for(
+                                               'save_match_score', 
+                                               league=league, 
+                                               session_id=session_id, 
+                                               player_id1=match.player1.player_id, 
+                                               player_id2=match.player2.player_id
+                                            ) 
+                                        }}">
+                <input type="submit" value="input score" />
+            </form>
+        </td>
+      </tr>
     {% endfor %}
+    </table>
 {% endfor %}

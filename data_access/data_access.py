@@ -98,6 +98,29 @@ class DataAccess():
         self.cursor.execute(sql, (session_id, group_number))
         return self.cursor.fetchall()
 
+    def get_match_results(self, session_id):
+        sql = """
+        select
+            p1.player_id player_1_id,
+            p1.name player_1_name,
+            p1.rating player_1_rating,
+            m.player_1_wins,
+            p2.player_id player_2_id,
+            p2.name player_2_name,
+            p2.rating player_2_rating,
+            m.player_2_wins
+        from match m
+        join player p1
+            on p1.player_id = m.player_1_id
+        join player p2
+            on p2.player_id = m.player_2_id
+        where m.session_id = ?
+        and m.group_number = ?
+        and m.ordinal = 1
+        """
+        self.cursor.execute(sql, (session_id,))
+        return self.cursor.fetchall()
+
     def get_match(self, session_id, p1_id, p2_id):
         sql = """
         select 
