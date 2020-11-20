@@ -31,8 +31,7 @@ def bttc_algorithm(rating, wins, player_2_rating, player_2_wins):
     returns:
         rating adjustment (signed int)
     '''
-    if wins == player_2_wins == 0:
-        return 0
+    # draw, or not entered etc.
     if wins == player_2_wins:
         return 0
     
@@ -47,19 +46,19 @@ def bttc_algorithm(rating, wins, player_2_rating, player_2_wins):
     if won_match:
         # this is expected result, adjust downward
         if rating > player_2_rating:
-            adjustment = max(16 - adjustment_factor, 0)
+            adjustment = max(16 - adjustment_factor, 0) - (2 * player_2_wins)
         # this is an upset, adjust upward
         else: 
-            adjustment = 16 + adjustment_factor
+            adjustment = 16 + adjustment_factor - (2 * player_2_wins)
 
     else:
         # lost but this is expected
         if player_2_rating > rating:
             # if adjustment factor > 16 no change
-            adjustment = -1 * max((16 - adjustment_factor), 0)
+            adjustment = -1 * max((16 - adjustment_factor), 0) + (2 * wins)
         # lost, and it's an upset
         else: 
-            adjustment = -1 * (16 + adjustment_factor)
+            adjustment = -1 * (16 + adjustment_factor) + (2 * wins)
 
     return adjustment
 

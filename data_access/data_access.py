@@ -179,6 +179,15 @@ class DataAccess():
         self.cursor.execute(sql, (player_id,))
         return self.cursor.fetchone()
 
+    def update_player_rating(self, player_id, rating):
+        sql = """
+        update player
+            set rating = ?
+        where player_id = ?
+        """
+        self.cursor.execute(sql, (rating, player_id))
+        self.conn.commit()
+
     def get_player_rating_by_session(self, session_id, player_id):
         sql = """
         select 

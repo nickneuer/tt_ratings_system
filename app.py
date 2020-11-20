@@ -207,7 +207,7 @@ def save_results(league, session_id):
     for player_id, new_rating in player_ratings.items():
         p = db.get_player(player_id)
         player = Player.from_player_row(p)
-        
+
         rating_pair = db.get_player_rating_by_session(session_id, player_id)
         if rating_pair is not None:
             previous_rating = rating_pair['previous_rating']
@@ -220,6 +220,7 @@ def save_results(league, session_id):
             previous_rating=previous_rating, 
             rating=new_rating
         )
+        db.update_player_rating(player_id=player_id, rating=new_rating)
         # should update player's rating too (on player record)
         summary = '{0} -- old rating: {1}, new rating: {2}'.format(
             player.name,
