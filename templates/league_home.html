@@ -12,7 +12,7 @@
     <option value= "{{ player }}">{{ '{0} ({1})'.format(player['name'], player['rating']) }}</option>"
     {% endfor %}
 </select>
-<input type="submit" value="Go!">
+<input type="submit" value="view stats">
 </form>
 <form method="get" action="{{ url_for('create_player', league=league) }}">
     <input type="submit" value="create player" />
