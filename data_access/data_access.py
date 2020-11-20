@@ -212,6 +212,17 @@ class DataAccess():
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    def get_sessions(self):
+        sql = """
+        select 
+            session_id,
+            session_date
+        from session
+        order by session_id asc
+        """
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
     def add_session_to_player(self, session_id, player_id):
         sql = """
         insert into session_to_player (

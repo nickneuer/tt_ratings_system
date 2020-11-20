@@ -5,7 +5,7 @@
     {{ render_field(form.max_group_size) }}
     {{ render_field(form.num_groups) }}
   </dl>
-  <p><input type=submit value=Create>
+  <p><input type=submit value="Create Groups">
 </form>
 {%for g in groups %}
     <h2>{{ "Group {}".format(g.group_number) }} </h2>
@@ -13,3 +13,6 @@
         <p>{{ '{0} ({1})'.format(p.name, p.rating) }}</p>
     {% endfor %}
 {% endfor %}
+<form method="get" action="{{ url_for('match_edit', league=league, session_id=session_id) }}">
+    <input type="submit" value="generate matches" />
+</form>

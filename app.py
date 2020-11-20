@@ -88,12 +88,16 @@ def league_view(league):
     ### create a new session /leagues/<league>/new_session -> /leagues/<league>/<session_id>/check-in/
     ### from /leagues/<league>/<session_id>/check-in/ you should be able to add or select players
     ### then submit, which should create the groups, allow you to edit them (move players around)  
-    return jsonify(
-        {
-            'league': db.db_path,
-            'players': db.get_players()
-        }
-    )
+    # return jsonify(
+    #     {
+    #         'league': db.db_path,
+    #         'players': db.get_players()
+    #     }
+    # )
+    players = db.get_players()
+    sessions = db.get_sessions()
+    print('got sessions: {}'.format(sessions))
+    return render_template('league_home.html', players=players, league=league, sessions=sessions)
 
 @app.route('/leagues/<league>/player', methods=['GET', 'POST'])
 def create_player(league):
@@ -156,11 +160,55 @@ def edit_groups(league, session_id):
         for group in groups:
             for player in group.players:
                 db.update_player_group(session_id, player.player_id, group.group_number)
-        return render_template('group_edit.html', form=form, groups=groups)
-    return render_template('group_edit.html', form=form, groups=groups)
+        # return render_template('group_edit.html', form=form, groups=groups)
+    return render_template(
+        'group_edit.html', form=form, groups=groups, league=league, session_id=session_id)
+
+@app.route('/leagues/<league>/session/<session_id>/groups/input', methods=['GET', 'POST'])
+def match_edit(league, session_id):
+    db = get_db(league)
+    players = db.get_players_by_session_id(session_id)
+    groups = []
+    group = Group(1, [])
+    # arrange them into groups
+    for player in players:
+        p = Player.from_player_row(player)
+        if player['group_number'] != group.group_number:
+            groups.append(group)
+            group = Group(player['group_number'], [])
+            group.add_player(p)
+        else:
+            group.add_player(p)
+    groups.append(group)
+    # initialize any missing matches
+    group_results = []
+    for g in groups:
+        for p1, p2 in g.make_matches():
+            if not db.get_match(session_id, p1.player_id, p2.player_id):
+                db.add_match(p1.player_id, p2.player_id, g.group_number, session_id)
+
+        match_rows = db.get_matches_by_group(session_id, g.group_number)
+        group_result = GroupResult.from_match_rows(g.group_number, match_rows)
+        group_result.players = g.players
+        group_results.append(group_result)
+
+    return render_template('groups.html', group_results=group_results, session_id=session_id, league=league)
+
+@app.route('/leagues/<league>/session/<session_id>/groups/input/<player_id1>/<player_id2>', methods=['GET', 'POST'])
+def save_match_score(league, session_id, player_id1, player_id2):
+    form = MatchForm(request.form)
+    db = get_db(league)
+    player1 = Player.from_player_row(db.get_player(player_id1))
+    player2 = Player.from_player_row(db.get_player(player_id2))
+    if request.method == 'POST' and form.validate():
+        p1_wins = form.p1_wins.data
+        p2_wins = form.p2_wins.data
+        db.update_match(player_id1, player_id2, session_id, p1_wins=p1_wins, p2_wins=p2_wins)
+        return redirect(url_for('match_edit', league=league, session_id=session_id))
+    return render_template('match.html', form=form, player1=player1, player2=player2)
 
 @app.route('/leagues/<league>/session/<session_id>/results', methods=['GET', 'POST'])
-def save_results(league, session_id):
+def session_results(league, session_id):
     # eventually will render things like ranking-pre ranking-post
     # group winners etc.
     db = get_db(league)
@@ -230,50 +278,6 @@ def save_results(league, session_id):
         summaries.append(summary)
     return jsonify(summaries)
 
-    
-
-@app.route('/leagues/<league>/session/<session_id>/groups/input', methods=['GET', 'POST'])
-def match_edit(league, session_id):
-    db = get_db(league)
-    players = db.get_players_by_session_id(session_id)
-    groups = []
-    group = Group(1, [])
-    # arrange them into groups
-    for player in players:
-        p = Player.from_player_row(player)
-        if player['group_number'] != group.group_number:
-            groups.append(group)
-            group = Group(player['group_number'], [])
-            group.add_player(p)
-        else:
-            group.add_player(p)
-    groups.append(group)
-    # initialize any missing matches
-    group_results = []
-    for g in groups:
-        for p1, p2 in g.make_matches():
-            if not db.get_match(session_id, p1.player_id, p2.player_id):
-                db.add_match(p1.player_id, p2.player_id, g.group_number, session_id)
-
-        match_rows = db.get_matches_by_group(session_id, g.group_number)
-        group_result = GroupResult.from_match_rows(g.group_number, match_rows)
-        group_result.players = g.players
-        group_results.append(group_result)
-
-    return render_template('groups.html', group_results=group_results, session_id=session_id, league=league)
-
-@app.route('/leagues/<league>/session/<session_id>/groups/input/<player_id1>/<player_id2>', methods=['GET', 'POST'])
-def save_match_score(league, session_id, player_id1, player_id2):
-    form = MatchForm(request.form)
-    db = get_db(league)
-    player1 = Player.from_player_row(db.get_player(player_id1))
-    player2 = Player.from_player_row(db.get_player(player_id2))
-    if request.method == 'POST' and form.validate():
-        p1_wins = form.p1_wins.data
-        p2_wins = form.p2_wins.data
-        db.update_match(player_id1, player_id2, session_id, p1_wins=p1_wins, p2_wins=p2_wins)
-        return redirect(url_for('match_edit', league=league, session_id=session_id))
-    return render_template('match.html', form=form, player1=player1, player2=player2)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

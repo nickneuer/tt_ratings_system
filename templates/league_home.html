@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leagues</title>
+</head>
+<body>
+<h2>Players</h2>
+<form method="post">
+ <select id="player" name="player">
+    {% for player in players %}
+    <option value= "{{ player }}">{{ '{0} ({1})'.format(player['name'], player['rating']) }}</option>"
+    {% endfor %}
+</select>
+<input type="submit" value="Go!">
+</form>
+<form method="get" action="{{ url_for('create_player', league=league) }}">
+    <input type="submit" value="create player" />
+</form>
+<h2>Results</h2>
+{%for session in sessions %}
+    <p>
+        <a href="{{ url_for('session_results', league=league, session_id=session['session_id']) }}">{{ session['session_date'] }}</a>
+    </p>
+{% endfor %}
+<form method="get" action="{{ url_for('add_session', league=league) }}">
+    <input type="submit" value="new session" />
+</form>
+</body>
+</html>
+

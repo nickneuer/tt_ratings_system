@@ -54,3 +54,6 @@ table, th, td {
     {% endfor %}
     </table>
 {% endfor %}
+<form method="post" action="{{ url_for('session_results', league=league, session_id=session_id) }}">
+    <input type="submit" value="save session results" />
+</form>
