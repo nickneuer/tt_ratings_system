@@ -5,6 +5,7 @@ from flask import (
     request, url_for, jsonify, redirect
 )
 import json
+import io
 import os
 from data_access.data_access import DataAccess
 from ratings.groupings import Group, GroupResult, Player, Match, make_groups
@@ -12,6 +13,11 @@ from ratings.ratings import bttc_algorithm
 from wtforms import (
     Form, BooleanField, StringField, 
     PasswordField, IntegerField, validators, FieldList, FormField)
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.pylab import plt
+from matplotlib.ticker import (
+    MultipleLocator
+)
 import time
 
 app = Flask(__name__)
@@ -84,16 +90,6 @@ def choose_league():
 @app.route('/leagues/<league>')
 def league_view(league):
     db = get_db(league)
-    ### look at existing sessions /leages/<league>/<session_id>/
-    ### create a new session /leagues/<league>/new_session -> /leagues/<league>/<session_id>/check-in/
-    ### from /leagues/<league>/<session_id>/check-in/ you should be able to add or select players
-    ### then submit, which should create the groups, allow you to edit them (move players around)  
-    # return jsonify(
-    #     {
-    #         'league': db.db_path,
-    #         'players': db.get_players()
-    #     }
-    # )
     players = db.get_players()
     sessions = db.get_sessions()
     print('got sessions: {}'.format(sessions))
@@ -291,6 +287,35 @@ def session_results(league, session_id):
 
     return render_template('session_results.html', group_results=group_results, league=league)
 
+@app.route('/leagues/<league>/player/<player_id>', methods=['GET'])
+def player_view(league, player_id):
+    db = get_db(league)
+    player = db.get_player(player_id)
+    return render_template('player.html', league=league, player=player)
+
+#### GRAPHING PLAYER RATING OVER TIME
+
+def plot_player_history(name, sessions, ratings):
+    fig = plt.figure(figsize=(20,5))
+    ax = fig.add_subplot(1, 1, 1)
+    ax.plot(sessions, ratings, label=name)
+    ax.legend(loc='upper left')
+    ax.xaxis.set_major_locator(MultipleLocator(12))
+    return fig
+
+@app.route('/leagues/<league>/player/<player_id>/rating-history', methods=['GET', 'POST'])
+def graph_ratings(league, player_id):
+    db = get_db(league)
+    player = db.get_player(player_id)
+    ratings_by_session = db.get_ratings_history(player_id)
+    ratings = [r['rating'] for r in ratings_by_session]
+    sessions = [r['session_date'] for r in ratings_by_session]
+    fig = plot_player_history(player['name'], sessions, ratings)
+    output = io.BytesIO()
+    FigureCanvas(fig).print_png(output)
+    return Response(output.getvalue(), mimetype='image/png')
+
+####
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

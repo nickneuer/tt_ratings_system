@@ -270,6 +270,20 @@ class DataAccess():
         self.cursor.execute(sql, (session_id,))
         return self.cursor.fetchall()
 
+    def get_ratings_history(self, player_id):
+        sql = """
+        select 
+            s.session_date,
+            r.rating
+        from rating r
+        join session s
+            on r.session_id = s.session_id
+        where r.player_id = ?
+        order by s.session_id
+        """
+        self.cursor.execute(sql, (player_id,))
+        return self.cursor.fetchall()
+
     def get_players_by_group(self, session_id, group_number):
         sql = """
         select 
