@@ -1,0 +1,35 @@
+
+<h><a href="{{ url_for('league_view', league=league) }}">League Home</a>
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+</style>
+{%for g in group_results %}
+    <h2>{{ "Group {}".format(g.group_number) }} </h2>
+    {%for p in g.players %}
+        <p>{{ '{0} ({1} --> {2})'.format(p.name, p.previous_rating, p.new_rating) }}</p>
+    {% endfor %}
+    <h3>Matches</h3>
+
+    <table>
+      <tr>
+        <th>Player 1</th>
+        <th>Player 2</th>
+        <th>Wins (player 1)</th>
+        <th>Wins (player 2)</th>
+        <th></th>
+      </tr>
+    {%for match in g.matches %}
+
+      <tr>
+        <td>{{ match.player1.name }}</td>
+        <td>{{ match.player2.name }}</td>
+        <td>{{ match.p1_wins }}</td>
+        <td>{{ match.p2_wins }}</td>
+      </tr>
+    {% endfor %}
+    </table>
+{% endfor %}
+

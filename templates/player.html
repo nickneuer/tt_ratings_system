@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Index</title>
+</head>
+<h>{{ '{0} ({1})'.format(player['name'], player['rating']) }}
+<body>
+<h2><a href="{{ url_for('graph_ratings', league=league, player_id=player['player_id']) }}">Graph Rating History</a></h2>
+<!-- <h2><a href="{{ url_for('player_stats_dropdown') }}">Player Match Stats</a></h2>
+ --></body>
+</html>
