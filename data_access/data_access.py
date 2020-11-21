@@ -98,6 +98,16 @@ class DataAccess():
         self.cursor.execute(sql, (session_id, group_number))
         return self.cursor.fetchall()
 
+    def get_group_count(self, session_id):
+        sql = """
+        select 
+            count(distinct group_number) c
+        from session_to_player 
+        where session_id = ?
+        """
+        self.cursor.execute(sql, (session_id,))
+        return self.cursor.fetchone()['c']
+
     def get_match_results(self, session_id):
         sql = """
         select
@@ -258,6 +268,22 @@ class DataAccess():
         order by stp.group_number asc, p.rating desc
         """
         self.cursor.execute(sql, (session_id,))
+        return self.cursor.fetchall()
+
+    def get_players_by_group(self, session_id, group_number):
+        sql = """
+        select 
+            p.player_id,
+            p.name,
+            p.rating
+        from session_to_player stp 
+        join player p
+            on stp.player_id = p.player_id
+        where stp.session_id = ?
+        and stp.group_number = ?
+        order by p.rating desc
+        """
+        self.cursor.execute(sql, (session_id, group_number))
         return self.cursor.fetchall()
 
 

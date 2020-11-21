@@ -212,6 +212,7 @@ def session_results(league, session_id):
     # eventually will render things like ranking-pre ranking-post
     # group winners etc.
     db = get_db(league)
+    # for some of this should only do on POST
     match_records = db.get_match_results(session_id)
     # calculate the total rating change per player
     # TODO: should probably encapsulate this logic somewhere else
@@ -250,8 +251,7 @@ def session_results(league, session_id):
         player_ratings[match.player1.player_id] += p1_adjustment
         player_ratings[match.player2.player_id] += p2_adjustment
         # add the new ratings for each player
-
-    summaries = []
+    rating_change = {}
     for player_id, new_rating in player_ratings.items():
         p = db.get_player(player_id)
         player = Player.from_player_row(p)
@@ -261,22 +261,35 @@ def session_results(league, session_id):
             previous_rating = rating_pair['previous_rating']
         else:
             previous_rating = player.rating
+        # make a lookup of previous and new rating for session
+        rating_change[player_id] = {}
+        rating_change[player_id]['previous_rating'] = previous_rating
+        rating_change[player_id]['new_rating'] = new_rating
 
-        db.add_rating(
-            player_id=player_id, 
-            session_id=session_id, 
-            previous_rating=previous_rating, 
-            rating=new_rating
-        )
-        db.update_player_rating(player_id=player_id, rating=new_rating)
-        # should update player's rating too (on player record)
-        summary = '{0} -- old rating: {1}, new rating: {2}'.format(
-            player.name,
-            previous_rating,
-            new_rating
-        )
-        summaries.append(summary)
-    return jsonify(summaries)
+        if request.method == 'POST':
+            db.add_rating(
+                player_id=player_id, 
+                session_id=session_id, 
+                previous_rating=previous_rating, 
+                rating=new_rating
+            )
+            db.update_player_rating(player_id=player_id, rating=new_rating)
+
+    group_results = []
+    num_groups = db.get_group_count(session_id)
+    for n in range(num_groups):
+        group_number = n + 1
+        match_rows = db.get_matches_by_group(session_id, group_number)
+        group_result = GroupResult.from_match_rows(group_number, match_rows)
+        player_rows = db.get_players_by_group(session_id, group_number)
+        players = [Player.from_player_row(p) for p in player_rows]
+        for p in players:
+            p.new_rating = rating_change[p.player_id]['new_rating']
+            p.previous_rating = rating_change[p.player_id]['previous_rating']
+        group_result.players = players
+        group_results.append(group_result)
+
+    return render_template('session_results.html', group_results=group_results)
 
 
 @app.route('/', methods=['GET', 'POST'])
