@@ -289,7 +289,7 @@ def session_results(league, session_id):
         group_result.players = players
         group_results.append(group_result)
 
-    return render_template('session_results.html', group_results=group_results)
+    return render_template('session_results.html', group_results=group_results, league=league)
 
 
 @app.route('/', methods=['GET', 'POST'])
