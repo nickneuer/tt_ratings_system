@@ -23,8 +23,9 @@ import time
 app = Flask(__name__)
 app.secret_key = 'some secret key'
 
-DATABASE_DIR = '/Users/nickneuer/code/rating_system/data/'
-SCHEMA_PATH = '/Users/nickneuer/code/rating_system/data_access/schema.sql'
+app_dir = os.path.dirname(os.path.abspath(__file__))
+DATABASE_DIR = os.path.join(app_dir, 'data')
+SCHEMA_PATH = os.path.join(app_dir, 'data_access/schema.sql')
 
 def get_db(db_name):
     db = getattr(g, '_database', None)
