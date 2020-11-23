@@ -268,7 +268,7 @@ class DataAccess():
         where session_id = ? 
         and player_id = ?
         """
-        self.cursor.execute(sql, (session_id, player_id))
+        self.cursor.execute(check_sql, (session_id, player_id))
         if self.cursor.fetchone() is not None:
             return 
             
