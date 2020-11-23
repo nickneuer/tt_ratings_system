@@ -81,7 +81,7 @@ def create_league():
 
 @app.route('/leagues', methods=['GET', 'POST'])
 def choose_league():
-    leagues = os.listdir(DATABASE_DIR)
+    leagues = [f for f in os.listdir(DATABASE_DIR) if not f.startswith('.')]
     if request.method == 'POST':
         league = request.form.get('league')
         db = get_db(league)
