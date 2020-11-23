@@ -98,6 +98,34 @@ class DataAccess():
         self.cursor.execute(sql, (session_id, group_number))
         return self.cursor.fetchall()
 
+    def get_matches_by_player(self, player_id, start_session_id=None):
+        sql = """
+        select
+            p1.player_id player_1_id,
+            p1.name player_1_name,
+            p1.rating player_1_rating,
+            m.player_1_wins,
+            p2.player_id player_2_id,
+            p2.name player_2_name,
+            p2.rating player_2_rating,
+            m.player_2_wins
+        from match m
+        join player p1
+            on p1.player_id = m.player_1_id
+        join player p2
+            on p2.player_id = m.player_2_id
+        where p1.player_id = ?
+        """
+        params = (player_id,)
+        if start_session_id is not None:
+            sql += """
+            and m.session_id >= ?
+            """
+            params = (player_id, start_session_id)
+
+        self.cursor.execute(sql, params)
+        return self.cursor.fetchall()
+
     def get_group_count(self, session_id):
         sql = """
         select 
@@ -273,6 +301,7 @@ class DataAccess():
     def get_ratings_history(self, player_id):
         sql = """
         select 
+            s.session_id,
             s.session_date,
             r.rating
         from rating r
@@ -283,6 +312,16 @@ class DataAccess():
         """
         self.cursor.execute(sql, (player_id,))
         return self.cursor.fetchall()
+
+    def get_session_date(self, session_id):
+        sql = """
+        select 
+            session_date
+        from session
+        where session_id = ?
+        """
+        self.cursor.execute(sql, (session_id,))
+        return self.cursor.fetchone()['session_date']
 
     def get_players_by_group(self, session_id, group_number):
         sql = """

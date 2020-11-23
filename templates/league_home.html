@@ -9,7 +9,7 @@
 <form method="post">
  <select id="player" name="player">
     {% for player in players %}
-    <option value= "{{ player }}">{{ '{0} ({1})'.format(player['name'], player['rating']) }}</option>"
+    <option value= "{{ player['player_id'] }}">{{ '{0} ({1})'.format(player['name'], player['rating']) }}</option>"
     {% endfor %}
 </select>
 <input type="submit" value="view stats">

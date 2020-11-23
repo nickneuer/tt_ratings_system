@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <title>Index</title>
 </head>
-<h>{{ '{0} ({1})'.format(player['name'], player['rating']) }}
+<h><a href="{{ url_for('league_view', league=league) }}">League Home</a></h>
+<div></div>
+<h3>{{ '{0} ({1})'.format(player['name'], player['rating']) }}</h3>
 <body>
-<h2><a href="{{ url_for('graph_ratings', league=league, player_id=player['player_id']) }}">Graph Rating History</a></h2>
-<!-- <h2><a href="{{ url_for('player_stats_dropdown') }}">Player Match Stats</a></h2>
- --></body>
+<p><a href="{{ url_for('graph_ratings', league=league, player_id=player['player_id']) }}">Graph Rating History</a></p>
+<p><a href="{{ url_for('match_history', league=league, player_id=player['player_id']) }}">Match History</a></p>
+</body>
 </html>

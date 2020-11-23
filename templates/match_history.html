@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Match Summary</title>
+</head>
+<h><a href="{{ url_for('league_view', league=league) }}">League Home</a></h>
+<div></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+<body>
+<form 
+    id='num_weeks' 
+    name='num_weeks' 
+    action="{{url_for('match_history', league=league, player_id=player.player_id, num_weeks=num_weeks)}}" 
+    method="get">
+  <label for="num_weeks">Number of recent round robins to consider:</label>
+  <input type="number" id="num_weeks" name="num_weeks">
+  <input type="submit">
+</form>
+<table id="match_summary" class="display" style="width:100%">
+  <caption>Match History for {{player.name}} (current rating: {{player.rating}}) </caption>
+  <thead>
+      <tr>
+        <th>Opponent</th>
+        <th>Match Wins V.S.</th>
+        <th>Match Losses V.S.</th>
+        <th>Match Win Percent</th>
+        <th>Total Game Wins</th>
+        <th>Total Game Losses</th>
+        <th>Game Win Percent</th>
+      </tr>
+  </thead>
+  <tbody>
+      {% for opponent in match_stats.values() %}
+      <tr>
+        <td>
+          <a href="{{ url_for('match_history', league=league, player_id=opponent['opponent'].player_id) }}"> {{opponent['opponent'].name}} </a>
+        </td>
+        <td>{{opponent['match_wins']}}</td>
+        <td>{{opponent['match_losses']}}</td>
+        <td>{{opponent['match_win_pct']}}</td>
+        <td>{{opponent['total_game_wins']}}</td>
+        <td>{{opponent['total_game_losses']}}</td>
+        <td>{{opponent['game_win_pct']}}</td>
+      </tr>
+      {% endfor %}
+  </tbody>
+</table>
+<script>
+$(document).ready(function() {
+    $('#match_summary').DataTable();
+} );
+</script>
+</body>
+</html>

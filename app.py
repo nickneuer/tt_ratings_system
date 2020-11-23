@@ -87,12 +87,15 @@ def choose_league():
         return redirect(url_for('league_view', league=league))
     return render_template('leagues.html', leagues=leagues)
 
-@app.route('/leagues/<league>')
+@app.route('/leagues/<league>', methods=['GET', 'POST'])
 def league_view(league):
     db = get_db(league)
     players = db.get_players()
     sessions = db.get_sessions()
     print('got sessions: {}'.format(sessions))
+    if request.method == 'POST':
+        player_id = int(request.form.get('player'))
+        return redirect(url_for('player_view', league=league, player_id=player_id))
     return render_template('league_home.html', players=players, league=league, sessions=sessions)
 
 @app.route('/leagues/<league>/player', methods=['GET', 'POST'])
@@ -210,6 +213,7 @@ def session_results(league, session_id):
     db = get_db(league)
     # for some of this should only do on POST
     match_records = db.get_match_results(session_id)
+    session_date = db.get_session_date(session_id)
     # calculate the total rating change per player
     # TODO: should probably encapsulate this logic somewhere else
     # what if rules like "bonus points" need to be added?
@@ -285,7 +289,11 @@ def session_results(league, session_id):
         group_result.players = players
         group_results.append(group_result)
 
-    return render_template('session_results.html', group_results=group_results, league=league)
+    return render_template(
+        'session_results.html', 
+        group_results=group_results, 
+        league=league, 
+        session_date=session_date)
 
 @app.route('/leagues/<league>/player/<player_id>', methods=['GET'])
 def player_view(league, player_id):
@@ -315,7 +323,69 @@ def graph_ratings(league, player_id):
     FigureCanvas(fig).print_png(output)
     return Response(output.getvalue(), mimetype='image/png')
 
-####
+#### MATCH SUMMARIES BY PLAYER
+
+@app.route('/leagues/<league>/player/<player_id>/match-stats', methods=['GET', 'POST'])
+def match_history(league, player_id=None, num_weeks=None):
+    db = get_db(league)
+    if player_id is None:
+        player_id = request.form.get('player')
+
+    num_weeks = request.args.get('num_weeks')
+    if num_weeks is not None:
+        num_weeks = int(num_weeks)
+
+    player = db.get_player(player_id)
+    sessions = db.get_ratings_history(player_id)
+    start_session_id = None
+    num_sessions = len(sessions)
+    if num_weeks is not None and num_sessions > num_weeks:
+        start_idx = num_sessions - num_weeks
+        start_session_id = sessions[start_idx]['session_id']
+
+    match_rows = db.get_matches_by_player(player_id, start_session_id=start_session_id)
+    # repurposing GroupResult for a collection of matches
+    matches = GroupResult.from_match_rows(0, match_rows).matches
+    match_stats = {}
+    for match in matches:
+        player_2_id = match.player2.player_id
+        if match.p2_wins > match.p1_wins:
+            p1_won = 0
+            p2_won = 1
+        elif match.p1_wins > match.p2_wins:
+            p1_won = 1
+            p2_won = 0
+        else:
+            p1_won = 0
+            p2_won = 0
+
+        if player_2_id not in match_stats:
+            match_stats[player_2_id] = {
+                'opponent': match.player2,
+                'match_wins': p1_won,
+                'match_losses': p2_won,
+                'match_win_pct': 0,
+                'total_game_wins': match.p1_wins,
+                'total_game_losses': match.p2_wins,
+                'game_win_pct': 0,
+                'total_matches': 1,
+                'total_games': match.p1_wins + match.p2_wins
+            }
+        else:
+            match_stats[player_2_id]['match_wins'] += p1_won
+            match_stats[player_2_id]['match_losses'] += p2_won
+            match_stats[player_2_id]['total_game_wins'] += match.p1_wins
+            match_stats[player_2_id]['total_game_losses'] += match.p2_wins
+            match_stats[player_2_id]['total_games'] += (match.p1_wins + match.p2_wins)
+            match_stats[player_2_id]['total_matches'] += 1
+    # go back and calculate percentages
+    for player_2_id, stats in match_stats.items():
+        stats['match_win_pct'] = round(float(stats['match_wins']) / stats['total_matches'] * 100, 1)
+        stats['game_win_pct'] = round(float(stats['total_game_wins']) / stats['total_games'] * 100, 1)
+
+    return render_template('match_history.html', match_stats=match_stats, player=player, league=league)
+
+#################################################################
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

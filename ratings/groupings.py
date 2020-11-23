@@ -115,6 +115,9 @@ class GroupResult():
 
         return GroupResult(group_num, matches)
 
+    def calculate_ranking_in_group(self):
+        pass
+
 
 def make_groups(players, num_groups, min_per_group=None, max_per_group=None):
     # sort ratings high to low
