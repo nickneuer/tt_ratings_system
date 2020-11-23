@@ -262,6 +262,16 @@ class DataAccess():
         return self.cursor.fetchall()
 
     def add_session_to_player(self, session_id, player_id):
+        check_sql = """
+        select 1
+        from session_to_player 
+        where session_id = ? 
+        and player_id = ?
+        """
+        self.cursor.execute(sql, (session_id, player_id))
+        if self.cursor.fetchone() is not None:
+            return 
+            
         sql = """
         insert into session_to_player (
             session_id,
