@@ -1,5 +1,5 @@
-
-should be able to: 
+webapp here: https://tt-ratings.herokuapp.com/leagues/sams_garage.db
+notes to self... should be able to: 
 
 * decide groups based on players and ratings, taking into account promotion from winning the previous group
 * input match outcomes, determining group winner and rating changes
